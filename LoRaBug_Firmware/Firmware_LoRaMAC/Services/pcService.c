@@ -45,7 +45,7 @@
  * CONSTANTS
  */
 #define PC_TASK_PRIORITY                     5
-#define PC_TASK_STACK_SIZE                   2048
+#define PC_TASK_STACK_SIZE                   1500
 
 #define NUM_RAW_FRAMES 15
 #define NUM_MEDIAN_FRAMES 7
@@ -59,9 +59,9 @@
 #define OFFSET_START 1
 #define OFFSET_END 3
 
-#define TRIGGER_THRESHOLD 6  // Threshold to detect as a person
-#define LOWER_THRESHOLD 4  // Threshold for heat signature difference in frames
-#define UPPER_THRESHOLD 20  // Threshold for heat signature difference in frames
+#define TRIGGER_THRESHOLD 7  // Threshold to detect as a person
+#define LOWER_THRESHOLD 5  // Threshold for heat signature difference in frames
+#define UPPER_THRESHOLD 25  // Threshold for heat signature difference in frames
 
 #define INACTIVITY_COUNTER_THRESHOLD 50
 
@@ -264,18 +264,6 @@ static void update_internal_counter(void) {
     internal_counter.count_updated = true;
 }
 
-static void print_frame(uint16_t *frame) {
-    for (int i = 0; i < GE_FRAME_SIZE; i++) {
-        if (i < GE_FRAME_SIZE - 1) {
-            //uartprintf("%d,", frame[i]);
-        } else {
-            //uartprintf("%d", frame[i]);
-        }
-    }
-    //uartprintf("\r\n");
-    //uartprintf("\r\n");
-}
-
 static void onPIR(PIN_Handle handle, PIN_Id pinId) {
     inactivity_counter = 0;
     // If we're sleeping, wake up the PC task
@@ -310,14 +298,12 @@ static void pc_taskFxn(UArg a0, UArg a1) {
             sleeping = true;
 
             // Sleep on semaphore
-            setLed(Board_GLED, 0);
             pir_enable_interrupt();
             Semaphore_pend(Semaphore_handle(&sleep_sem), BIOS_WAIT_FOREVER);
 
             // If here, then we were woken up by PIR
             sleeping = false;
             //grideye_set_power(false);
-            setLed(Board_GLED, 1);
             grideye_set_mode(GE_MODE_NORMAL);
             DELAY_MS(800);
             //uartprintf("Woke up!\r\n");
@@ -334,7 +320,6 @@ static void pc_taskFxn(UArg a0, UArg a1) {
             } else {
                 inactivity_counter += 1;
             }
-            //toggleLed(Board_RLED);
             //uartprintf("PIR: %d\r\n", pir_get_value());
             //DELAY_MS(50);
         }

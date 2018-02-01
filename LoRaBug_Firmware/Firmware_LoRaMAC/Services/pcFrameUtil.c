@@ -60,10 +60,7 @@ void frame_queue_init(frame_queue_t *queue, frame_t *frames, uint16_t size, uint
 }
 
 bool frame_queue_full(frame_queue_t *queue) {
-    //uartputs("Checking\r\n");
-    bool result = queue->cur_len == queue->max_len;
-    //uartprintf("Full: %d\r\n", result);
-    return result;
+    return queue->cur_len == queue->max_len;
 }
 
 frame_t frame_queue_get(frame_queue_t *queue, uint16_t i) {
@@ -75,17 +72,14 @@ frame_t frame_queue_get(frame_queue_t *queue, uint16_t i) {
 }
 
 void enqueue_frame(frame_queue_t *queue, frame_t new_frame) {
-    //uartprintf("Enqueuing, size=%d\r\n", queue->cur_len);
     // Copy new data into 0th frame
     for (int i = 0; i < queue->elem_size; i++) {
-        //uartprintf("Writing %d to %x (%d,%d)\r\n", new_frame[i], &queue->frames[0][i], i, queue->elem_size);
         queue->frames[0][i] = new_frame[i];
     }
 
     // Rotate queue pointers by 1
     frame_t newest_frame = queue->frames[0];
     for (int i = 0; i < queue->max_len - 1; i++) {
-        //uartprintf("%x->%x\r\n", queue->frames[i], queue->frames[i+1]);
         queue->frames[i] = queue->frames[i+1];
     }
 
@@ -93,7 +87,6 @@ void enqueue_frame(frame_queue_t *queue, frame_t new_frame) {
     if (queue->cur_len < queue->max_len) {
         queue->cur_len += 1;
     }
-    //uartputs("Done\r\n");
 }
 
 frame_t compute_median_frame(frame_queue_t *queue, frame_t frame_out) {

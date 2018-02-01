@@ -76,14 +76,6 @@ PIN_Config btnPinTable[] = {
     PIN_TERMINATE
 };
 
-/**
- * Do a system hard reset when triggered
- */
-static void btnIntCallback(PIN_Handle handle, PIN_Id pinId)
-{
-    SysCtrlSystemReset();
-}
-
 void setuppins()
 {
     ledPinHandle = PIN_open(&ledPinState, ledPinTable);
@@ -101,7 +93,10 @@ void setuppins()
     {
         System_abort("Failed to open board BTN pin\n");
     }
-    if (PIN_registerIntCb(btnPinHandle, btnIntCallback) != PIN_SUCCESS)
+}
+
+void setBtnIntCallback(PIN_IntCb pCb) {
+    if (PIN_registerIntCb(btnPinHandle, pCb) != PIN_SUCCESS)
     {
         System_abort("Failed to register btn int callback\n");
     }

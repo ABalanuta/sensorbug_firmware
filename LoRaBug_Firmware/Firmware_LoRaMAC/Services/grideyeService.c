@@ -48,8 +48,23 @@
  * CONSTANTS
  */
 
-#define LED_PIN_RX      Board_GLED
-#define LED_PIN_TX      Board_RLED
+
+#define GE_BUFFER_DATA_LENGTH 64
+
+#define GE_READ_TIME 50
+
+// Grideye registers and addresses
+#define GE_SLAVE_ADDRESS 0x69
+#define GE_REG_THERM_LSB 0x0E
+#define GE_REG_THERM_MSB 0x0F
+#define GE_REG_PIXEL_BASE 0x80
+#define GE_REG_STATE 0x00
+#define GE_REG_RESET 0x01
+
+#define GE_CMD_INITIAL_RESET 0x3F
+#define GE_CMD_FLAG_RESET 0x30
+
+#define GE_POWER_PIN Board_HDR_PORTF6
 
 #define GE_BUFFER_DATA_LENGTH 64
 
@@ -112,9 +127,7 @@ static uint8_t grideye_read_byte(uint8_t addr) {
 
     handle = I2C_open(Board_I2C, &params);
     if(!handle) {
-        setLed(Board_RLED, true);
-        uartprintf("Error opening i2c handle during read\r\n");
-    }
+        //uartprintf("Error opening i2c handle during read\r\n");
 
     i2cTrans.slaveAddress = GE_SLAVE_ADDRESS;
     i2cTrans.writeBuf = ge_write_buffer;
@@ -127,8 +140,7 @@ static uint8_t grideye_read_byte(uint8_t addr) {
     bool status = false;
     status = I2C_transfer(handle, &i2cTrans);
     if (!status) {
-        setLed(Board_RLED, true);
-        uartprintf("Failed to read i2c grideye data\r\n");
+        //uartprintf("Failed to read i2c grideye data\r\n");
     }
     I2C_close(handle);
 
@@ -156,8 +168,7 @@ static void grideye_write_bytes(uint8_t addr, uint8_t *data, uint8_t length) {
 
     handle = I2C_open(Board_I2C, &params);
     if(!handle) {
-        setLed(Board_RLED, true);
-        uartprintf("Error opening i2c handle during write\r\n");
+        //uartprintf("Error opening i2c handle during write\r\n");
     }
 
     i2cTrans.slaveAddress = GE_SLAVE_ADDRESS;
@@ -174,8 +185,7 @@ static void grideye_write_bytes(uint8_t addr, uint8_t *data, uint8_t length) {
     bool status = false;
     status = I2C_transfer(handle, &i2cTrans);
     if (!status) {
-        setLed(Board_RLED, true);
-        uartprintf("Failed to write i2c grideye data\r\n");
+        //uartprintf("Failed to write i2c grideye data\r\n");
     }
     I2C_close(handle);
 }

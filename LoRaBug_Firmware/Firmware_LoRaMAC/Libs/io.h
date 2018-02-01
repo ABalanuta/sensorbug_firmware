@@ -19,6 +19,8 @@ extern "C" {
 void setuppins();
 void setupuart();
 
+void setBtnIntCallback(PIN_IntCb pCb);
+
 void uartwrite(const char *str, size_t size);
 void uartputs(const char *str);
 void uartprintf(const char *format, ...)
