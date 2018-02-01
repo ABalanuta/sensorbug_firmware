@@ -1,13 +1,9 @@
 /******************************************************************************
-
   @file  grideyeService.c
-
  @brief This file contains a simple I2C transaction with the GRIDEYE
          Created on: Jul 6, 2017
-
  @author: Abhinand Sukumar
  @author: Jacob Brooks
-
  ******************************************************************************/
 
 #ifndef SERVICES_GRIDEYESERVICE_C_
@@ -128,7 +124,7 @@ static uint8_t grideye_read_byte(uint8_t addr) {
     handle = I2C_open(Board_I2C, &params);
     if(!handle) {
         //uartprintf("Error opening i2c handle during read\r\n");
-
+    }
     i2cTrans.slaveAddress = GE_SLAVE_ADDRESS;
     i2cTrans.writeBuf = ge_write_buffer;
     i2cTrans.writeCount = 1;

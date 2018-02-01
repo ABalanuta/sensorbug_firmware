@@ -128,7 +128,6 @@ static uint8_t DevEui[] = LORAWAN_DEVICE_EUI;
 static uint8_t AppEui[] = LORAWAN_APPLICATION_EUI;
 static uint8_t AppKey[] = LORAWAN_APPLICATION_KEY;
 
-static uint8_t mode = MODE_SENSORBUG;
 
 #if( OVER_THE_AIR_ACTIVATION == 0 )
 
@@ -211,11 +210,6 @@ struct ComplianceTest_s
     uint8_t DemodMargin;
     uint8_t NbGateways;
 }ComplianceTest;
-
-void user_delay_ms(uint32_t period)
-{
-    DELAY_MS(period);
-}
 
 /*********************************************************************
  * @fn      enableCache
@@ -806,7 +800,7 @@ void maintask(UArg arg0, UArg arg1)
                     blePayload[i+2] = DevEui[i];
                 }
                 send_advertisement(blePayload, 10);
-                user_delay_ms(BLE_ADV_DUTY_CYCLE_MS);
+                DELAY_MS(BLE_ADV_DUTY_CYCLE_MS);
                 break;
             }
             case DEVICE_STATE_JOIN:
@@ -928,7 +922,7 @@ int dummy(UArg arg1, UArg arg2) {
  */
 int main(void)
 {
-//    Task_Params taskParams;
+    Task_Params taskParams;
 
     /* Call board init functions */
     Board_initGeneral();
