@@ -5,7 +5,7 @@
 #include <Apps/sensorbugBasicDrivers/Commissioning.h>
 #include <Apps/sensorbugBasicDrivers/pb_decode.h>
 #include <Apps/sensorbugBasicDrivers/pb_encode.h>
-#include <Apps/sensorbugBasicDrivers/occulow.pb.h>
+#include <Apps/sensorbugBasicDrivers/sensorbug.pb.h>
 #include <xdc/std.h>
 #include <xdc/runtime/System.h>
 #include <stdlib.h>
@@ -282,8 +282,8 @@ static void setJoined(bool joined) {
 static void PrepareTxFrame( uint8_t port )
 {
     size_t message_length;
-    static CountMessage message = CountMessage_init_zero;
-    // static SensorMessage message = SensorMessage_init_zero;
+//    static CountMessage message = CountMessage_init_zero;
+    static SensorMessage message = SensorMessage_init_zero;
 
     pb_ostream_t stream;
     bool status;
@@ -294,6 +294,7 @@ static void PrepareTxFrame( uint8_t port )
     switch( port )
     {
     case LORAWAN_APP_PORT:
+        setLed(Board_RLED, true);
         //Prepare sensor readings to send over LoRa
         stream = pb_ostream_from_buffer(AppData, sizeof(AppData));
 
@@ -302,13 +303,16 @@ static void PrepareTxFrame( uint8_t port )
         message.count_out = counter.out_count;
         message.batteryVoltage = BoardGetBatteryVoltage();
         message.batteryLevel = BoardGetBatteryLevel();
+        message.pir_status = 1;
+        message.light = 0;
+        message.mic = 0;
         //uartprintf ("Sending %d/%d\r\nVoltage: %d\r\nLevel: %d\r\n", message.count_in, message.count_out, message.batteryVoltage, message.batteryLevel);
 
-        status = pb_encode(&stream, CountMessage_fields, &message);
+        status = pb_encode(&stream, SensorMessage_fields, &message);
         message_length = stream.bytes_written;
 
         AppDataSize = message_length;
-
+        setLed(Board_RLED, false);
         if(!status) {
             //uartprintf ("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
         }
