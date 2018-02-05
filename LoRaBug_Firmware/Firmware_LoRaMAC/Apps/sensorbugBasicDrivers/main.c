@@ -306,6 +306,7 @@ static void PrepareTxFrame( uint8_t port )
         message.pir_status = 1;
         message.light = 0;
         message.mic = 0;
+        message.accelx = 0.0;
         //uartprintf ("Sending %d/%d\r\nVoltage: %d\r\nLevel: %d\r\n", message.count_in, message.count_out, message.batteryVoltage, message.batteryLevel);
 
         status = pb_encode(&stream, SensorMessage_fields, &message);

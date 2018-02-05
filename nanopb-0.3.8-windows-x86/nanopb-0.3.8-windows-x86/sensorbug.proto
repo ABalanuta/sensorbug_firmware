@@ -8,4 +8,5 @@ message SensorMessage {
     required uint32 pir_status = 5;
     required uint32 light = 6;
     required uint32 mic = 7;
+    required float accelx = 8;
 }
