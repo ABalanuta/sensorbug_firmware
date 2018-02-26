@@ -50,7 +50,7 @@
 #include <driverlib/flash.h>
 #include <driverlib/vims.h>
 
-#define TASKSTACKSIZE   1500
+#define TASKSTACKSIZE   2048
 
 Task_Struct task0Struct;
 Char task0Stack[TASKSTACKSIZE];
@@ -281,6 +281,7 @@ static void setJoined(bool joined) {
  */
 static void PrepareTxFrame( uint8_t port )
 {
+    uartprintf("Sending data\r\n");
     size_t message_length;
 //    static CountMessage message = CountMessage_init_zero;
     static SensorMessage message = SensorMessage_init_zero;
@@ -294,26 +295,139 @@ static void PrepareTxFrame( uint8_t port )
     switch( port )
     {
     case LORAWAN_APP_PORT:
-        setLed(Board_RLED, true);
+        setLed(Board_GLED, true);
         //Prepare sensor readings to send over LoRa
         stream = pb_ostream_from_buffer(AppData, sizeof(AppData));
 
-        pc_get_counts(&counter, true);
-        message.count_in = counter.in_count;
-        message.count_out = counter.out_count;
+//        pc_get_counts(&counter, true);
+        message.count_in = 0;//counter.in_count;
+        message.count_out = 0;//counter.out_count;
         message.batteryVoltage = BoardGetBatteryVoltage();
         message.batteryLevel = BoardGetBatteryLevel();
-        message.pir_status = 1;
-        message.light = 0;
-        message.mic = 0;
+
+        setPin(Board_HDR_HDIO1, true);
+        //DELAY_MS(100);
+        ADC_Handle   adc, adc1;
+        ADC_Params   params, params1;
+        int_fast16_t res, res1;
+
+        ADC_Params_init(&params);
+        adc = ADC_open(2, &params);
+
+        if (adc == NULL) {
+            DELAY_MS(100);
+            System_abort("ADC err\n");
+        }
+
+
+        uint16_t adcValue0, adcValue1;
+        uint16_t minV, maxV;
+
+        minV = 0xFFFF;
+        maxV = 0;
+
+        uint32_t currTicks, startTicks;
+
+        startTicks = Clock_getTicks();
+        currTicks = startTicks;
+
+        while((currTicks - startTicks) < 5000) {
+            currTicks = Clock_getTicks();
+            res = ADC_convert(adc, &adcValue0);
+            if (res == ADC_STATUS_SUCCESS) {
+                if(maxV < adcValue0)
+                    maxV = adcValue0;
+                if(minV > adcValue0)
+                    minV = adcValue0;
+            }
+            else {
+                uartprintf("ADConverr\r\n");
+            }
+
+        }
+        ADC_close(adc);
+
+        ADC_Params_init(&params1);
+        adc = ADC_open(0, &params1);
+
+        if (adc == NULL) {
+            DELAY_MS(100);
+            System_abort("ADC err2\n");
+        }
+
+
+        startTicks = Clock_getTicks();
+        currTicks = startTicks;
+        uint32_t lightAvg = 0, count = 0;
+
+
+        while((currTicks - startTicks) < 5000) {
+            currTicks = Clock_getTicks();
+            res = ADC_convert(adc, &adcValue1);
+            if (res == ADC_STATUS_SUCCESS) {
+                lightAvg += adcValue1;
+                count++;
+            }
+            else {
+                uartprintf("ADConverr2\r\n");
+            }
+
+        }
+        ADC_close(adc);
+        lightAvg = lightAvg/count;
+
+        setPin(Board_HDR_HDIO1, false);
+
+        uint32_t pir_status;
+
+        //Get PIR status
+        startTicks = Clock_getTicks();
+        currTicks = startTicks;
+        while((currTicks - startTicks) < 5000){
+            currTicks = Clock_getTicks();
+            pir_status = getPin(Board_HDR_ADIO6);
+            if(pir_status == 1)
+                break;
+        }
+
+        message.mic = maxV - minV;
+        message.pir_status = pir_status;
+        message.light = lightAvg;
+
         message.accelx = 0.0;
+        message.accely = 0.0;
+        message.accelz = 0.0;
+        message.gyrx = 0.0;
+        message.gyry = 0.0;
+        message.gyrz = 0.0;
+
+        uint8_t bmxData[20];
+        getBmxData(bmxData);
+
+
+        message.accelz = ((float)((((uint32_t)bmxData[19]) << 8) | (uint32_t)bmxData[18])) * (2.0 / 32767);
+        message.accely = ((float)((((uint32_t)bmxData[17]) << 8) | (uint32_t)bmxData[16])) * (2.0 / 32767);
+        message.accelx = ((float)((((uint32_t)bmxData[15]) << 8) | (uint32_t)bmxData[14])) * (2.0 / 32767);
+
+        message.gyrz = ((float)((((uint32_t)bmxData[13]) << 8) | bmxData[12])) * (2000.0 / 32767);
+        message.gyry = ((float)((((uint32_t)bmxData[11]) << 8) | bmxData[10])) * (2000.0 / 32767);
+        message.gyrx = ((float)((((uint32_t)bmxData[9]) << 8) | bmxData[8])) * (2000.0 / 32767);
+
+
+        message.temp = 0.0;
+        message.pres = 0.0;
+        message.hum = 0.0;
+
+        getBMEData(&message.temp, &message.pres, &message.hum);
+//        message.pressure = 0.0;
+//        message.humidity = 0.0;
         //uartprintf ("Sending %d/%d\r\nVoltage: %d\r\nLevel: %d\r\n", message.count_in, message.count_out, message.batteryVoltage, message.batteryLevel);
 
         status = pb_encode(&stream, SensorMessage_fields, &message);
         message_length = stream.bytes_written;
 
         AppDataSize = message_length;
-        setLed(Board_RLED, false);
+        setLed(Board_GLED, false);
         if(!status) {
             //uartprintf ("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
         }
@@ -944,13 +1058,13 @@ int main(void)
     taskParams.stack = &task0Stack;
     Task_construct(&task0Struct, (Task_FuncPtr) maintask, &taskParams, NULL);
 
-    pcService_createTask();
+//    pcService_createTask();
 
     /* Open and setup pins */
     setuppins();
 
     /* Open UART */
-    //setupuart();
+    setupuart();
 
     /* Start BIOS */
     BIOS_start();

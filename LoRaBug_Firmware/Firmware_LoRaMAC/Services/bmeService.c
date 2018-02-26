@@ -258,6 +258,7 @@ void getBMEData(float *temp, float *pres, float *hum) {
         *temp = data.temperature / 100.0f;
         *pres = data.pressure / 100.0f;
         *hum = data.humidity / 1000.0f;
+        uartprintf("Done reading BME dataa\r\n");
 }
 
 void testBMEChip() {

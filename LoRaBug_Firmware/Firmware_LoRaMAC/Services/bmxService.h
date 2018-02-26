@@ -42,7 +42,7 @@ extern "C"
  */
 extern void bmxService_createTask(void);
 
-extern void getBmxData(uint32_t *data);
+extern void getBmxData(uint8_t *data);
 
 
 /*********************************************************************

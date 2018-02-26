@@ -65,14 +65,14 @@ Task_Struct bmxTask;
 Char bmxTaskStack[BMX_TASK_STACK_SIZE];
 
 
-void getBmxData(uint32_t *data)
+void getBmxData(uint8_t *data)
 {
 
     I2C_Handle handle;
     I2C_Handle handle1;
     I2C_Params params;
     I2C_Transaction normalSettings, normalCmd;
-    I2C_Transaction suspendCmd;
+//    I2C_Transaction suspendCmd;
     I2C_Transaction pmuNormalCheck, pmuSuspendCheck;
     I2C_Transaction dataRead, checkDataReady;
 
@@ -429,7 +429,7 @@ void getBmxData(uint32_t *data)
  */
 static void bmx_taskFxn (UArg a0, UArg a1)
 {
-    uint32_t data[20];
+    uint8_t data[20];
     while(1){
         getBmxData(data);
         DELAY_MS(5000);
